@@ -1,0 +1,33 @@
+# Data source configuration
+
+# Specify the URL/path to your data here (either a local file or s3)
+# Glob patterns are supported, but all files must be of the same format
+source: s3://my-bucket/data.parquet
+
+# Specify the format of the files in the source pattern above
+# Supported formats: csv, parquet
+format: parquet
+
+# SDK configuration (these values are passed directly to the Aporia SDK)
+token: 123
+environment: production
+
+# Model configuration
+
+# You can find the model_id after creating a model in the Aporia dashboard
+model_id: my-model-a2f4
+
+# Define your model version schema here (see https://app.aporia.com/docs/getting-started/concepts/#model-version-schema)
+# Note: If you use a version that already exists, the schema defined here must match the schema of the exisitng version
+model_version:
+  name: v1
+  type: binary
+  predictions:
+    will_buy_insurance: boolean
+  features:
+    Age: numeric
+    Driving_License: boolean
+    Region_Code: categorical
+    Annual_Premium: numeric
+    Vintage: numeric
+    Vehicle_Damage: boolean
