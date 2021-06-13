@@ -1,0 +1,18 @@
+source: s3://aporia-s3-script-test/creditcard.csv
+token: 123
+environment: prod
+aporia_host: http://localhost
+aporia_port: 80
+
+model_id: test-awm9
+model_version:
+  name: v2
+  type: regression
+  predictions:
+    Class: boolean
+  features:
+    V1: numeric
+    V2: numeric
+    V3: numeric
+    Amount: numeric
+  # raw_inputs:
