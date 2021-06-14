@@ -4,6 +4,8 @@ from typing import Optional
 
 from yaml import safe_load
 
+from .data_loader import DataFormat
+
 
 @dataclass
 class ModelVersion:
@@ -21,6 +23,7 @@ class Config:
     """Importer configuration."""
 
     source: str
+    format: DataFormat
     environment: str
     token: str
     model_id: str
@@ -43,6 +46,7 @@ def load_config(config_path: Path) -> Config:
 
     return Config(
         source=config_dict["source"],
+        format=DataFormat(config_dict["format"]),
         environment=config_dict["environment"],
         token=config_dict["token"],
         model_id=config_dict["model_id"],

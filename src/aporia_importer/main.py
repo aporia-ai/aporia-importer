@@ -4,9 +4,9 @@ from uuid import uuid4
 
 import aporia
 from aporia.pandas import pandas_to_dict
-import dask.dataframe as dd
 
 from .config import load_config
+from .data_loader import load_data
 
 
 def parse_args() -> argparse.Namespace:
@@ -43,13 +43,19 @@ def main():
         raw_inputs=config.model_version.raw_inputs,
     )
 
-    data = dd.read_csv(config.source)
-
+    data = load_data(source=config.source, format=config.format)
     for _, row in data.iterrows():
+        # If you wish to modify your data before reporting it, do it here
+
+        raw_inputs = None
+        if config.model_version.raw_inputs is not None:
+            raw_inputs = pandas_to_dict(row[config.model_version.raw_inputs.keys()])
+
         model.log_prediction(
             id=str(uuid4()),
             features=pandas_to_dict(row[config.model_version.features.keys()]),
             predictions=pandas_to_dict(row[config.model_version.predictions.keys()]),
+            raw_inputs=raw_inputs,
         )
 
     model.flush()
