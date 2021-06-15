@@ -40,6 +40,7 @@ The following table describes all of the configuration fields in detail:
 | raw_inputs | False | A mapping of [raw inputs fields](https://app.aporia.com/docs/getting-started/concepts/#raw-inputs) to their field types
 | aporia_host | False | Aporia server URL. Defaults to app.aporia.com
 | aporia_port | False | Aporia server port. Defaults to 80
+| log_level | False | Logging level, defaults to INFO
 
 ## Supported Cloud Providers
 * s3

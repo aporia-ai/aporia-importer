@@ -4,6 +4,7 @@ token: 123
 environment: production
 aporia_host:
 aporia_port:
+log_level: INFO
 
 model_id: my-model-a2f4
 model_version:

@@ -4,6 +4,7 @@ from typing import Optional
 
 from yaml import safe_load
 
+from aporia_importer.logging_utils import DEFAULT_LOG_LEVEL
 from .data_loader import DataFormat
 
 
@@ -28,6 +29,7 @@ class Config:
     token: str
     model_id: str
     model_version: ModelVersion
+    log_level: str
     aporia_host: Optional[str] = None
     aporia_port: Optional[int] = None
 
@@ -57,6 +59,7 @@ def load_config(config_path: Path) -> Config:
             features=config_dict["model_version"]["features"],
             raw_inputs=config_dict["model_version"].get("raw_inputs"),
         ),
+        log_level=config_dict.get("log_level", DEFAULT_LOG_LEVEL),
         aporia_host=config_dict.get("aporia_host"),
         aporia_port=config_dict.get("aporia_port"),
     )
