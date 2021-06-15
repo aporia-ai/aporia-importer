@@ -1,22 +1,21 @@
-source: s3://aporia-s3-script-test/creditcard.parquet
+source: s3://my-bucket/data.parquet
 format: parquet
 token: 123
-environment: prod
-aporia_host: http://localhost
-aporia_port: 80
+environment: production
+aporia_host:
+aporia_port:
 
-model_id: s3-wgx0
+model_id: my-model-a2f4
 model_version:
   name: v1
-  type: regression
+  type: binary
   predictions:
-    Class: numeric
+    will_buy_insurance: boolean
   features:
-    V1: numeric
-    V2: numeric
-    V3: numeric
-    V4: numeric
-    V5: numeric
-    V6: numeric
-    Amount: numeric
-  # raw_inputs:
+    Age: numeric
+    Driving_License: boolean
+    Region_Code: categorical
+    Annual_Premium: numeric
+    Vintage: numeric
+    Vehicle_Damage: boolean
+  raw_inputs:
