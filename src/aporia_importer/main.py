@@ -8,7 +8,7 @@ from aporia.pandas import pandas_to_dict
 
 from .config import load_config
 from .data_loader import load_data
-from .logging_utils import init_logging
+from .logging_utils import DEFAULT_LOG_LEVEL, init_logging, LOG_LEVEL_OPTIONS
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,6 +19,13 @@ def parse_args() -> argparse.Namespace:
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("config", type=Path, help="Path to yaml config file")
+    parser.add_argument(
+        "--log-level",
+        required=False,
+        choices=LOG_LEVEL_OPTIONS,
+        default=DEFAULT_LOG_LEVEL,
+        help="Logging level",
+    )
 
     return parser.parse_args()
 
@@ -26,10 +33,10 @@ def parse_args() -> argparse.Namespace:
 def main():
     """Main entry point."""
     args = parse_args()
-    config = load_config(args.config)
-    init_logging(config.log_level)
+    init_logging(args.log_level)
 
     try:
+        config = load_config(args.config)
         logging.info("Initializing Aporia SDK")
         aporia.init(
             token=config.token,
