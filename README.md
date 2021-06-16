@@ -41,8 +41,9 @@ The following table describes all of the configuration fields in detail:
 | aporia_host | False | Aporia server URL. Defaults to app.aporia.com
 | aporia_port | False | Aporia server port. Defaults to 80
 
-## Supported Cloud Providers
-* s3
+## Supported Data Sources
+* Local files
+* S3
 
 ## Supported Data Formats
 * csv
