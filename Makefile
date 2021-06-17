@@ -15,7 +15,7 @@ install-deps:
 	@sudo apt install python3-setuptools
 	@sudo pip3 install poetry nox --upgrade
 
-# Run tests\
+# Run tests
 test:
 	@echo [!] Running tests
 	@nox
