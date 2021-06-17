@@ -30,6 +30,14 @@ bump-version:
 			semver bump patch $(CURRENT_VERSION); \
 		fi; \
 	))
+	$(eval CURRENT_BRANCH=$(shell git rev-parse --abbrev-ref HEAD))
+	$(eval BRANCH_PROTECTION_PATTERN=$(shell \
+		if [[ $(CURRENT_BRANCH) == release/* ]]; then \
+			echo "release/*"; \
+		else \
+			echo $(CURRENT_BRANCH); \
+		fi; \
+	))
 
 	@git log -1 --pretty="%B" > /tmp/commit-message
 	@sed -i '1s/^/\[$(NEW_VERSION)] /' /tmp/commit-message
@@ -43,17 +51,21 @@ bump-version:
 
 	git tag -a -m "Version $(NEW_VERSION)" $(NEW_VERSION)
 
-	@BRANCH_PROTECTION=`curl https://api.github.com/repos/$(GITHUB_REPOSITORY)/branches/master/protection \
-		-H "Authorization: token $(CAMPARIBOT_TOKEN)" -H "Accept:application/vnd.github.luke-cage-preview+json" -X GET -s`; \
-	if [ "`echo $$BRANCH_PROTECTION | jq -r '.message'`" != "Branch not protected" ]; \
+	@BRANCH_PROTECTION_ID=`curl https://api.github.com/graphql \
+		-H "Authorization: bearer $(CAMPARIBOT_TOKEN)" -H "Content-Type: application/json" \
+		-X POST -d '{ "query": "query { repository(name: \"$(IMAGE_NAME)\", owner: \"aporia-ai\") { branchProtectionRules(first: 100) { nodes { id, pattern } } } }" }' | \
+		jq -r '.data.repository.branchProtectionRules.nodes | .[] | select(.pattern == "$(BRANCH_PROTECTION_PATTERN)") | .id'`; \
+	if [ ! -z $$BRANCH_PROTECTION_ID ]; \
 	then \
-		echo [!] Disabling GitHub main branch protection; \
-		curl https://api.github.com/repos/$(GITHUB_REPOSITORY)/branches/master/protection \
-			-H "Authorization: token $(CAMPARIBOT_TOKEN)" -H "Accept:application/vnd.github.luke-cage-preview+json" -X DELETE; \
+		echo [!] Temporarily Change GitHub branch protection pattern \(to disable it for our branch\); \
+		curl https://api.github.com/graphql \
+			-H "Authorization: bearer $(CAMPARIBOT_TOKEN)" -H "Content-Type: application/json" \
+			-X POST -d "{ \"query\": \"mutation { updateBranchProtectionRule(input: { branchProtectionRuleId: \\\"$$BRANCH_PROTECTION_ID\\\", pattern: \\\"__this-branch-does-not-exist__\\\"  } ) { clientMutationId } }\" }"; \
 		trap '\
-			echo [!] Re-enabling GitHub main branch protection; \
-			curl https://api.github.com/repos/$(GITHUB_REPOSITORY)/branches/master/protection -H "Authorization: token $(CAMPARIBOT_TOKEN)" \
-				-H "Accept:application/vnd.github.luke-cage-preview+json" -X PUT -d "{\"required_status_checks\":{\"strict\":false,\"contexts\":`echo $$BRANCH_PROTECTION | jq '.required_status_checks.contexts'`},\"restrictions\":{\"users\":[],\"teams\":[],\"apps\":[]},\"required_pull_request_reviews\":{\"dismiss_stale_reviews\":false,\"require_code_owner_reviews\":false},\"enforce_admins\":true,\"required_linear_history\":false,\"allow_force_pushes\":true,\"allow_deletions\":false}"; \
+			echo [!] Re-enabling GitHub branch protection for our pattern; \
+			curl https://api.github.com/graphql \
+				-H "Authorization: bearer $(CAMPARIBOT_TOKEN)" -H "Content-Type: application/json" \
+				-X POST -d "{ \"query\": \"mutation { updateBranchProtectionRule(input: { branchProtectionRuleId: \\\"$$BRANCH_PROTECTION_ID\\\", pattern: \\\"$(BRANCH_PROTECTION_PATTERN)\\\"  } ) { clientMutationId } }\" }"; \
 		' EXIT; \
 	fi; \
 	echo [!] Git Push; \
