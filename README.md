@@ -4,6 +4,7 @@
 
 A small utility to import ML production data from your cloud storage provider and monitor it using [Aporia's monitoring platform](https://www.aporia.com/).
 
+<img src="logo.png" width="550"/>
 
 ## Installation
 ```
