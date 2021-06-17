@@ -1,5 +1,5 @@
 # 🏋️‍♀️ Aporia Importer
-<img src="logo.png" width="200"/>
+<img src="logo.png" width="400"/>
 
 ![Version](https://img.shields.io/pypi/v/aporia-importer)
 ![License](https://img.shields.io/github/license/aporia-ai/aporia-importer)
