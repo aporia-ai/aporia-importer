@@ -15,7 +15,7 @@ install-deps:
 	@sudo apt install python3-setuptools
 	@sudo pip3 install poetry nox --upgrade
 
-# Run tests
+# Run tests\
 test:
 	@echo [!] Running tests
 	@nox
@@ -38,6 +38,7 @@ bump-version:
 			echo $(CURRENT_BRANCH); \
 		fi; \
 	))
+	$(eval REPOSITORY_NAME=$(shell echo "$(GITHUB_REPOSITORY)" | cut -d / -f 2))
 
 	@git log -1 --pretty="%B" > /tmp/commit-message
 	@sed -i '1s/^/\[$(NEW_VERSION)] /' /tmp/commit-message
@@ -53,7 +54,7 @@ bump-version:
 
 	@BRANCH_PROTECTION_ID=`curl https://api.github.com/graphql \
 		-H "Authorization: bearer $(CAMPARIBOT_TOKEN)" -H "Content-Type: application/json" \
-		-X POST -d '{ "query": "query { repository(name: \"$(IMAGE_NAME)\", owner: \"aporia-ai\") { branchProtectionRules(first: 100) { nodes { id, pattern } } } }" }' | \
+		-X POST -d '{ "query": "query { repository(name: \"$(REPOSITORY_NAME)\", owner: \"aporia-ai\") { branchProtectionRules(first: 100) { nodes { id, pattern } } } }" }' | \
 		jq -r '.data.repository.branchProtectionRules.nodes | .[] | select(.pattern == "$(BRANCH_PROTECTION_PATTERN)") | .id'`; \
 	if [ ! -z $$BRANCH_PROTECTION_ID ]; \
 	then \
