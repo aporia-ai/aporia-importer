@@ -1,4 +1,7 @@
 # Aporia Importer
+https://img.shields.io/pypi/v/aporia-importer
+https://img.shields.io/github/license/aporia-ai/aporia-importer
+
 `aporia-importer` is a small utility that can be used to import data from your cloud storage provider directly to [Aporia](https://www.aporia.com/).
 
 
@@ -28,7 +31,7 @@ Currently, the configuration requires defining a model version schema manually -
 The following table describes all of the configuration fields in detail:
 | Field | Required | Description
 | - | - | -
-| source | True | The path to the files you wish to upload, e.g. s3://my-bucket.my_file.csv. Glob patterns are supported.
+| source | True | The path to the files you wish to upload, e.g. s3://my-bucket/my_file.csv. Glob patterns are supported.
 | format | True | The format of the files you wish to upload, see [here](#supported-data-formats)
 | token | True | Your Aporia authentication token
 | environment | True | The environment in which Aporia will be initialized (e.g production, staging)
@@ -39,7 +42,7 @@ The following table describes all of the configuration fields in detail:
 | features | True | A mapping of [feature fields](https://app.aporia.com/docs/getting-started/concepts/#features) to their field types
 | raw_inputs | False | A mapping of [raw inputs fields](https://app.aporia.com/docs/getting-started/concepts/#raw-inputs) to their field types
 | aporia_host | False | Aporia server URL. Defaults to app.aporia.com
-| aporia_port | False | Aporia server port. Defaults to 80
+| aporia_port | False | Aporia server port. Defaults to 443
 
 ## Supported Data Sources
 * Local files

@@ -2,8 +2,6 @@ source: s3://my-bucket/data.parquet
 format: parquet
 token: 123
 environment: production
-aporia_host:
-aporia_port:
 
 model_id: my-model-a2f4
 model_version:
