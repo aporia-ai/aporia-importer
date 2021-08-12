@@ -17,6 +17,11 @@ install-deps:
 	@sudo apt install python3-setuptools
 	@sudo pip3 install poetry nox --upgrade
 
+# Run tests
+test:
+	@echo [!] Running tests
+	@nox
+
 # Build docker image
 docker-build:
 	@echo [!] Building Docker image with tag: $(IMAGE_NAME)
@@ -36,10 +41,19 @@ docker-tag:
 		docker tag $(IMAGE_NAME):latest $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
 	fi
 
-# Run tests
-test:
-	@echo [!] Running tests
-	@nox
+# Push image to docker registry
+docker-push:
+	$(eval GIT_REVISION=$(shell git rev-parse HEAD | cut -c1-7))
+	@echo [!] Pushing $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(GIT_REVISION)
+	@docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(GIT_REVISION)
+
+	$(eval VERSION=$(shell git for-each-ref --sort=-v:refname --count=1 refs/tags/[0-9]*.[0-9]*.[0-9]* refs/tags/v[0-9]*.[0-9]*.[0-9]* | cut -d / -f 3-))
+	@if [ -n $(VERSION) ]; then \
+		echo [!] Pushing $(DOCKER_REGISTRY)/$(IMAGE_NAME):latest; \
+		docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):latest; \
+		echo [!] Pushing $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
+		docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
+	fi
 
 # Bump version
 bump-version:
@@ -94,3 +108,5 @@ bump-version:
 	git push --force;
 
 	echo "::set-output name=bumped_version_commit_hash::`git log --pretty=format:'%H' -n 1`";
+
+deploy: docker-build docker-tag docker-push
