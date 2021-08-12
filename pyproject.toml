@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "aporia-importer"
-version = "v1.0.10"
+version = "v1.0.11"
 description = "Import data from cloud storage to Aporia"
 authors = []
 readme = "README.md"
