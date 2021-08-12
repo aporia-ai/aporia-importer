@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+HELM_CHART=./charts/aporia-importer
 
 DEFAULT_VERSION=1.0.0
 
@@ -80,6 +81,10 @@ bump-version:
 	@poetry version $(NEW_VERSION) || true
 	@git add pyproject.toml || true
 
+	yq e '.image.repository = "$(IMAGE_NAME)"' -i $(HELM_CHART)/values.yaml
+	yq e '.appVersion = "$(NEW_VERSION)"' -i $(HELM_CHART)/Chart.yaml
+
+	git add $(HELM_CHART)/Chart.yaml $(HELM_CHART)/values.yaml
 	git commit -F /tmp/commit-message --amend --no-edit
 
 	git tag -a -m "Version $(NEW_VERSION)" $(NEW_VERSION)
