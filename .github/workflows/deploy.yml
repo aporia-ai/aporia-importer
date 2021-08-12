@@ -5,6 +5,9 @@ on:
       - master
       - release/*
       - devops/helm-chart
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
 jobs:
   deploy:
     runs-on: ubuntu-20.04
@@ -21,6 +24,13 @@ jobs:
           git config --global user.email "camparibot@aporia.com"
           git config --global user.name "camparibot"
           git config --global push.followTags true
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: make install-deps
@@ -56,6 +66,7 @@ jobs:
           AWS_DEFAULT_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
           AWS_ECR_ACCOUNT_URL: ${{ secrets.AWS_ECR_ACCOUNT_URL }}
           CAMPARIBOT_TOKEN: ${{ secrets.CAMPARIBOT_TOKEN }}
+          IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
 
       - name: Update check run to success
         run: |

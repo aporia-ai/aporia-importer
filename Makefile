@@ -1,5 +1,3 @@
-IMAGE_NAME=aporia-importer
-DOCKER_REGISTRY=ghcr.io/aporia-ai
 SHELL := /bin/bash
 
 DEFAULT_VERSION=1.0.0
@@ -17,26 +15,6 @@ install-deps:
 	@sudo apt install python3-setuptools
 	@sudo pip3 install poetry nox --upgrade
 
-# Build docker image
-docker-build:
-	@echo [!] Building Docker image with tag: $(IMAGE_NAME)
-	@docker build -f Dockerfile --no-cache -t $(IMAGE_NAME) .
-
-# Tag docker image
-docker-tag:
-	$(eval GIT_REVISION=$(shell git rev-parse HEAD | cut -c1-7))
-	@echo [!] Tagging $(IMAGE_NAME) image with $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(GIT_REVISION)
-	@docker tag $(IMAGE_NAME):latest $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(GIT_REVISION)
-
-	$(eval VERSION=$(shell git for-each-ref --sort=-v:refname --count=1 refs/tags/[0-9]*.[0-9]*.[0-9]* refs/tags/v[0-9]*.[0-9]*.[0-9]* | cut -d / -f 3-))
-	@if [ -n $(VERSION) ]; then \
-		echo [!] Tagging $(IMAGE_NAME) image with $(DOCKER_REGISTRY)/$(IMAGE_NAME):latest; \
-		docker tag $(IMAGE_NAME):latest $(DOCKER_REGISTRY)/$(IMAGE_NAME):latest; \
-		echo [!] Tagging $(IMAGE_NAME) image with $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
-		docker tag $(IMAGE_NAME):latest $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
-	fi
-
-# Run tests
 test:
 	@echo [!] Running tests
 	@nox
@@ -49,29 +27,29 @@ docker-build:
 # Tag docker image
 docker-tag:
 	$(eval GIT_REVISION=$(shell git rev-parse HEAD | cut -c1-7))
-	@echo [!] Tagging $(IMAGE_NAME) image with $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(GIT_REVISION)
-	@docker tag $(IMAGE_NAME):latest $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(GIT_REVISION)
+	@echo [!] Tagging $(IMAGE_NAME) image with $(IMAGE_NAME):$(GIT_REVISION)
+	@docker tag $(IMAGE_NAME):latest $(IMAGE_NAME):$(GIT_REVISION)
 
 	$(eval VERSION=$(shell git for-each-ref --sort=-v:refname --count=1 refs/tags/[0-9]*.[0-9]*.[0-9]* refs/tags/v[0-9]*.[0-9]*.[0-9]* | cut -d / -f 3-))
 	@if [ -n $(VERSION) ]; then \
-		echo [!] Tagging $(IMAGE_NAME) image with $(DOCKER_REGISTRY)/$(IMAGE_NAME):latest; \
-		docker tag $(IMAGE_NAME):latest $(DOCKER_REGISTRY)/$(IMAGE_NAME):latest; \
-		echo [!] Tagging $(IMAGE_NAME) image with $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
-		docker tag $(IMAGE_NAME):latest $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
+		echo [!] Tagging $(IMAGE_NAME) image with $(IMAGE_NAME):latest; \
+		docker tag $(IMAGE_NAME):latest $(IMAGE_NAME):latest; \
+		echo [!] Tagging $(IMAGE_NAME) image with $(IMAGE_NAME):$(VERSION); \
+		docker tag $(IMAGE_NAME):latest $(IMAGE_NAME):$(VERSION); \
 	fi
 
 # Push image to docker registry
 docker-push:
 	$(eval GIT_REVISION=$(shell git rev-parse HEAD | cut -c1-7))
-	@echo [!] Pushing $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(GIT_REVISION)
-	@docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(GIT_REVISION)
+	@echo [!] Pushing $(IMAGE_NAME):$(GIT_REVISION)
+	@docker push $(IMAGE_NAME):$(GIT_REVISION)
 
 	$(eval VERSION=$(shell git for-each-ref --sort=-v:refname --count=1 refs/tags/[0-9]*.[0-9]*.[0-9]* refs/tags/v[0-9]*.[0-9]*.[0-9]* | cut -d / -f 3-))
 	@if [ -n $(VERSION) ]; then \
-		echo [!] Pushing $(DOCKER_REGISTRY)/$(IMAGE_NAME):latest; \
-		docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):latest; \
-		echo [!] Pushing $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
-		docker push $(DOCKER_REGISTRY)/$(IMAGE_NAME):$(VERSION); \
+		echo [!] Pushing $(IMAGE_NAME):latest; \
+		docker push $(IMAGE_NAME):latest; \
+		echo [!] Pushing $(IMAGE_NAME):$(VERSION); \
+		docker push $(IMAGE_NAME):$(VERSION); \
 	fi
 
 # Bump version
