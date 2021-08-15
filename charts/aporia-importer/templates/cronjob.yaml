@@ -40,6 +40,8 @@ spec:
            - {{ .Values.autoscaling.minReplicas | quote }}
            - --k8s-workers-max
            - {{ .Values.autoscaling.maxReplicas | quote }}
+           - --k8s-worker-spec-path
+           - /aporia-importer/config/worker-spec.yaml
            {{- end }}
           resources:
             {{- toYaml .Values.importer.resources | nindent 12 }}
