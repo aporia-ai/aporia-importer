@@ -2,6 +2,8 @@ import argparse
 import logging
 from pathlib import Path
 from uuid import uuid4
+from dask.distributed import Client
+from dask_kubernetes import KubeCluster
 
 import aporia
 from aporia.pandas import pandas_to_dict
@@ -25,8 +27,24 @@ def parse_args() -> argparse.Namespace:
         choices=LOG_LEVEL_OPTIONS,
         default=DEFAULT_LOG_LEVEL,
         help="Logging level",
+    )   
+    parser.add_argument(
+        "--enable-k8s",
+        action='store_true',
+        help="Whether aporia-importer should run k8s workers to horizontally scale the workload",
     )
-
+    parser.add_argument(
+        "--k8s-workers-min",
+        type=int,
+        default=1,
+        help="Minimum K8s workers (--enable-k8s is required for this)",
+    )
+    parser.add_argument(
+        "--k8s-workers-max",
+        type=int,
+        default=3,
+        help="Maximum K8s workers (--enable-k8s is required for this)",
+    )
     return parser.parse_args()
 
 
@@ -35,48 +53,17 @@ def main():
     args = parse_args()
     init_logging(args.log_level)
 
-    try:
-        config = load_config(args.config)
-        logging.info("Initializing Aporia SDK")
-        aporia.init(
-            token=config.token,
-            host=config.aporia_host,
-            port=config.aporia_port,
-            environment=config.environment,
-            verbose=True,
-        )
+    try
+        # Horizontally scale on K8s if necessary.
+        if args.enable_k8s:
+            # FUTURE: Worker spec path should be an argument to the script.
+            cluster = KubeCluster('/aporia-importer/config/worker-spec.yaml')
+            cluster.adapt(minimum=args.k8s_workers_min, maximum=args.k8s_workers_max)
 
-        logging.info("Creating model version")
-        model = aporia.create_model_version(
-            model_id=config.model_id,
-            model_version=config.model_version.name,
-            model_type=config.model_version.type,
-            features=config.model_version.features,
-            predictions=config.model_version.predictions,
-            raw_inputs=config.model_version.raw_inputs,
-        )
+            # Connect Dask to the cluster
+            client = Client(cluster)
 
-        logging.info(f"Loading data from {config.source}, format: {config.format.value}")
-        data = load_data(source=config.source, format=config.format)
-
-        logging.info("Reporting predictions")
-        for _, row in data.iterrows():
-            # If you wish to modify your data before reporting it, do it here
-
-            raw_inputs = None
-            if config.model_version.raw_inputs is not None:
-                raw_inputs = pandas_to_dict(row[config.model_version.raw_inputs.keys()])
-
-            model.log_prediction(
-                id=str(uuid4()),
-                features=pandas_to_dict(row[config.model_version.features.keys()]),
-                predictions=pandas_to_dict(row[config.model_version.predictions.keys()]),
-                raw_inputs=raw_inputs,
-            )
-
-        model.flush()
-        aporia.shutdown()
-        logging.info("Finished")
+        # co\("Finished")
 
     except Exception:
         logging.error("Importing data from cloud storage to Aporia failed.", exc_info=True)

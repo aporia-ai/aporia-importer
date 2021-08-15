@@ -1,0 +1,64 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "aporia-importer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "aporia-importer.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.importer.schedule }}
+  jobTemplate:
+    metadata:
+    {{- with .Values.importer.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "aporia-importer.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.importer.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "aporia-importer.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.importer.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.importer.securityContext | nindent 12 }}
+          image: "{{ .Values.importer.image.repository }}:{{ .Values.importer.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.importer.image.pullPolicy }}
+          args:
+           - --config
+           - /aporia-importer/config/config.yaml
+           - --log-level
+           {{ .Values.importer.logLevel }}
+           {{- if .Values.autoscaling.enabled }}
+           - --enable-k8s
+           - --k8s-workers-min
+           - {{ .Values.autoscaling.minReplicas | quote }}
+           - --k8s-workers-max
+           - {{ .Values.autoscaling.maxReplicas | quote }}
+           {{- end }}
+          resources:
+            {{- toYaml .Values.importer.resources | nindent 12 }}
+          volumeMounts:
+          - name: config
+            mountPath: /aporia-importer/config
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "aporia-importer.fullname" . }}
+      {{- with .Values.importer.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.importer.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.importer.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
