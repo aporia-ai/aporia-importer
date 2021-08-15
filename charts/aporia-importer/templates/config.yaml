@@ -40,7 +40,7 @@ data:
         name: dask
         env:
           - name: EXTRA_PIP_PACKAGES
-            value: aporia[all] pyarrow s3fs git+https://github.com/dask/distributed
+            value: aporia[all] pyarrow s3fs git+https://github.com/dask/distributed pandas==1.3.1 
         resources:
           {{- toYaml .Values.autoscaling.worker.resources | nindent 10 }}
       {{- with .Values.autoscaling.worker.nodeSelector }}
