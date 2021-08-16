@@ -4,6 +4,7 @@ on:
     branches:
       - master
       - release/*
+      - devops/helm-chart
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
@@ -58,6 +59,7 @@ jobs:
         run: make deploy
         env:
           IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          CAMPARIBOT_TOKEN: ${{ secrets.CAMPARIBOT_TOKEN }}
 
       - name: Update check run to success
         run: |

@@ -21,7 +21,7 @@ def load_data(source: str, format: DataFormat) -> DataFrame:
         Dask Dataframe loaded from the source.
     """
     if format == DataFormat.CSV:
-        return read_csv(source)
+        return read_csv(source, assume_missing=True)
     elif format == DataFormat.PARQUET:
         return read_parquet(source, engine='pyarrow')
     else:
