@@ -54,7 +54,7 @@ docker-push:
 	fi
 
 # Build docker image and push to AWS registry
-docker-build-and-push: docker-login docker-build docker-tag docker-push
+docker-build-and-push: docker-build docker-tag docker-push
 
 # Configure helm repo
 helm-configure:
