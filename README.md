@@ -8,12 +8,12 @@ A small utility to import ML production data from your cloud storage provider an
 
 ## Installation
 ```
-pip install aporia-importer[all]
+pip install "aporia-importer[all]"
 ```
 
 If you only wish to install the dependencies for a specific cloud provider, you can use
 ```
-pip install aporia-importer[s3]
+pip install "aporia-importer[s3]"
 ```
 
 ## Usage

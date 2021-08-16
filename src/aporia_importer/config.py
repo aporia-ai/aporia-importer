@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Dict, Optional
 
 from yaml import safe_load
 
@@ -13,9 +13,9 @@ class ModelVersion:
 
     name: str
     type: str
-    predictions: dict[str, str]
-    features: dict[str, str]
-    raw_inputs: Optional[dict[str, str]] = None
+    predictions: Dict[str, str]
+    features: Dict[str, str]
+    raw_inputs: Optional[Dict[str, str]] = None
 
 
 @dataclass
