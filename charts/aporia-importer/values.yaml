@@ -3,7 +3,7 @@
 
 importer:
   # Importer cron job schedule
-  schedule: "*/1 * * * *"
+  schedule: "@daily"
 
   # YAML configuration. 
   # Check out examples/s3.yaml for an example.
