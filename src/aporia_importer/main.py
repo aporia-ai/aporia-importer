@@ -72,20 +72,16 @@ def process_partition(df, config):
         pass
 
     # Initialize Aporia in this worker if necessary
-    if worker is not None:
-        if not worker.data.get("IsAporiaInitialized", False):
-            print("Initializing Aporia; worker = ", worker.name)
-            aporia.init(
-                token=config.token,
-                host=config.aporia_host,
-                port=config.aporia_port,
-                environment=config.environment,
-                verbose=True,
-            )
+    if worker is not None and not worker.data.get("IsAporiaInitialized", False):
+        aporia.init(
+            token=config.token,
+            host=config.aporia_host,
+            port=config.aporia_port,
+            environment=config.environment,
+            verbose=True,
+        )
 
-            worker.data["IsAporiaInitialized"] = True
-        else:
-            print("Aporia was already initialized in this worker", worker.name)
+        worker.data["IsAporiaInitialized"] = True
 
 
     # Load Aporia model

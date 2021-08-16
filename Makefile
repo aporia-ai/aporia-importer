@@ -106,6 +106,7 @@ bump-version:
 	@poetry version $(NEW_VERSION) || true
 	@git add pyproject.toml || true
 
+	yq e '.version = "$(NEW_VERSION)"' -i $(HELM_CHART)/Chart.yaml
 	yq e '.appVersion = "$(NEW_VERSION)"' -i $(HELM_CHART)/Chart.yaml
 
 	git add $(HELM_CHART)/Chart.yaml
