@@ -32,20 +32,18 @@ spec:
                 {{- toYaml .Values.importer.securityContext | nindent 16 }}
               image: "{{ .Values.importer.image.repository }}:{{ .Values.importer.image.tag | default .Chart.AppVersion }}"
               imagePullPolicy: {{ .Values.importer.image.pullPolicy }}
+              command: ["/bin/bash"]
               args:
-              - --config
-              - /aporia-importer/config/config.yaml
-              - --log-level
-              - {{ .Values.importer.logLevel }}
-              {{- if .Values.autoscaling.enabled }}
-              - --enable-k8s
-              - --k8s-workers-min
-              - {{ .Values.autoscaling.minReplicas | quote }}
-              - --k8s-workers-max
-              - {{ .Values.autoscaling.maxReplicas | quote }}
-              - --k8s-worker-spec-path
-              - /aporia-importer/config/worker-spec.yaml
-              {{- end }}
+              - -c
+              - >-
+                python3 -m aporia_importer.main /aporia-importer/config/config.yaml
+                --log-level {{ .Values.importer.logLevel }}
+                {{- if .Values.autoscaling.enabled }}
+                --enable-k8s
+                --k8s-workers-min {{ .Values.autoscaling.minReplicas | quote }}
+                --k8s-workers-max {{ .Values.autoscaling.maxReplicas | quote }}
+                --k8s-worker-spec-path /aporia-importer/config/worker-spec.yaml
+                {{- end }}
               resources:
                 {{- toYaml .Values.importer.resources | nindent 16 }}
               volumeMounts:

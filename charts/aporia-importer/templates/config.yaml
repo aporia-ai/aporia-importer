@@ -9,7 +9,7 @@ data:
   config.yaml: |-
 {{ .Values.importer.config | indent 4 }}
   {{- if .Values.autoscaling.enabled }}
-  worker-spec.yml: |-
+  worker-spec.yaml: |-
     kind: Pod
     metadata:
       namespace: {{ .Release.Namespace }}
