@@ -1,0 +1,68 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - master
+      - release/*
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+jobs:
+  deploy:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@master
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config --global user.email "camparibot@aporia.com"
+          git config --global user.name "camparibot"
+          git config --global push.followTags true
+
+      - name: Log in to the Container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install dependencies
+        run: make install-deps
+
+      - name: Bump Version
+        id: bump-version
+        run: make bump-version
+        env:
+          IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          CAMPARIBOT_TOKEN: ${{ secrets.CAMPARIBOT_TOKEN }}
+
+      - name: Create check run
+        id: create-check-run
+        run: |
+          CHECK_RUN_ID=`curl -X POST https://api.github.com/repos/${{ github.repository }}/check-runs \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept:application/vnd.github.antiope-preview+json" \
+              -d "{\"name\": \"Aporia / deploy (push)\", \"head_sha\": \"${{ steps.bump-version.outputs.bumped_version_commit_hash }}\", \"status\": \"in_progress\", \"details_url\": \"https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}\", \"output\": {\"title\": \"Versioned Commit\", \"summary\": \"This is a versioned commit. To see the full GitHub Action, [click here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}).\"}}" \
+            | jq .id`;
+          echo "::set-output name=check_run_id::$CHECK_RUN_ID";
+
+      - name: Test
+        run: make test
+
+      - name: Deploy
+        run: make deploy
+        env:
+          IMAGE_NAME: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          CAMPARIBOT_TOKEN: ${{ secrets.CAMPARIBOT_TOKEN }}
+
+      - name: Update check run to success
+        run: |
+          curl -X PATCH https://api.github.com/repos/${{ github.repository }}/check-runs/${{ steps.create-check-run.outputs.check_run_id }} \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept:application/vnd.github.antiope-preview+json" \
+            -d "{\"status\": \"completed\", \"conclusion\": \"success\"}";

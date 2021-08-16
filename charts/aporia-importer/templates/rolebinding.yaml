@@ -1,0 +1,17 @@
+{{- if .Values.rbac.create }}
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: RoleBinding
+metadata:
+  name: {{ include "aporia-importer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "aporia-importer.labels" . | nindent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "aporia-importer.fullname" . }}
+subjects:
+- kind: ServiceAccount
+  name: {{ include "aporia-importer.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

@@ -1,0 +1,47 @@
+{{- if .Values.rbac.create }}
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1beta1
+metadata:
+  name: {{ include "aporia-importer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "aporia-importer.labels" . | nindent 4 }}
+rules:
+- apiGroups:
+  - ""  # indicates the core API group
+  resources:
+  - "pods"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "create"
+  - "delete"
+- apiGroups:
+  - ""  # indicates the core API group
+  resources:
+  - "pods/log"
+  verbs:
+  - "get"
+  - "list"
+- apiGroups:
+  - "" # indicates the core API group
+  resources:
+  - "services"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "create"
+  - "delete"
+- apiGroups:
+  - "policy"  # indicates the policy API group
+  resources:
+  - "poddisruptionbudgets"
+  verbs:
+  - "get"
+  - "list"
+  - "watch"
+  - "create"
+  - "delete"
+{{- end }}

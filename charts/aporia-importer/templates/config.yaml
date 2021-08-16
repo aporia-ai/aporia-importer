@@ -1,0 +1,100 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "aporia-importer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "aporia-importer.labels" . | nindent 4 }}
+data:
+  config.yaml: |-
+{{ .Values.importer.config | indent 4 }}
+  {{- if .Values.autoscaling.enabled }}
+  worker-spec.yaml: |-
+    kind: Pod
+    metadata:
+      namespace: {{ .Release.Namespace }}
+    {{- with .Values.autoscaling.worker.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "aporia-importer.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["/bin/bash"]
+        args:
+          - -c
+          - >-
+            dask-worker --no-dashboard --death-timeout {{ .Values.autoscaling.worker.deathTimeout }}
+            {{- if .Values.autoscaling.worker.resources.limits }}
+            --nthreads {{ .Values.autoscaling.worker.threadsPerWorker }}
+            --memory-limit {{ .Values.autoscaling.worker.resources.limits.memory }}
+            {{- end }} 
+        name: dask
+        resources:
+          {{- toYaml .Values.autoscaling.worker.resources | nindent 10 }}
+      {{- with .Values.autoscaling.worker.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.autoscaling.worker.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.autoscaling.worker.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.autoscaling.worker.serviceAccountName }}
+        serviceAccountName: {{ .Values.autoscaling.worker.serviceAccountName | quote }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  scheduler-spec.yaml: |-
+    kind: Pod
+    metadata:
+      namespace: {{ .Release.Namespace }}
+    {{- with .Values.autoscaling.scheduler.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+      labels:
+        {{- include "aporia-importer.selectorLabels" . | nindent 8 }}
+    spec:
+      restartPolicy: Never
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+      - image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: ["dask-scheduler"]
+        name: dask
+        resources:
+          {{- toYaml .Values.autoscaling.scheduler.resources | nindent 10 }}
+      {{- with .Values.autoscaling.scheduler.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.autoscaling.scheduler.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.autoscaling.scheduler.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.autoscaling.scheduler.serviceAccountName }}
+        serviceAccountName: {{ .Values.autoscaling.scheduler.serviceAccountName | quote }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+  {{- end }}

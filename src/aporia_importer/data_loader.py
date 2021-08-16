@@ -23,6 +23,6 @@ def load_data(source: str, format: DataFormat) -> DataFrame:
     if format == DataFormat.CSV:
         return read_csv(source, assume_missing=True)
     elif format == DataFormat.PARQUET:
-        return read_parquet(source)
+        return read_parquet(source, engine='pyarrow')
     else:
         raise RuntimeError(f"Unsupported data format {format}.")

@@ -1,0 +1,69 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: {{ include "aporia-importer.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "aporia-importer.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.importer.schedule | quote }}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+        {{- with .Values.importer.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+          labels:
+            {{- include "aporia-importer.selectorLabels" . | nindent 12 }}
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "aporia-importer.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.importer.podSecurityContext | nindent 12 }}
+          containers:
+            - name: {{ .Chart.Name }}
+              securityContext:
+                {{- toYaml .Values.importer.securityContext | nindent 16 }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command: ["/bin/bash"]
+              args:
+              - -c
+              - >-
+                python3 -m aporia_importer.main /aporia-importer/config/config.yaml
+                --log-level {{ .Values.importer.logLevel }}
+                {{- if .Values.autoscaling.enabled }}
+                --enable-k8s
+                --k8s-workers-min {{ .Values.autoscaling.minReplicas | quote }}
+                --k8s-workers-max {{ .Values.autoscaling.maxReplicas | quote }}
+                --k8s-worker-spec-path /aporia-importer/config/worker-spec.yaml
+                --k8s-scheduler-spec-path /aporia-importer/config/scheduler-spec.yaml
+                {{- end }}
+              resources:
+                {{- toYaml .Values.importer.resources | nindent 16 }}
+              volumeMounts:
+              - name: config
+                mountPath: /aporia-importer/config
+          volumes:
+            - name: config
+              configMap:
+                name: {{ include "aporia-importer.fullname" . }}
+          restartPolicy: Never
+          {{- with .Values.importer.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.importer.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.importer.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

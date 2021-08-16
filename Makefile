@@ -1,5 +1,6 @@
 SHELL := /bin/bash
-
+HELM_CHART=./charts/aporia-importer
+HELM_CHART_REPO=aporia-ai/public-helm-charts
 DEFAULT_VERSION=1.0.0
 
 # Install dependencies
@@ -15,10 +16,67 @@ install-deps:
 	@sudo apt install python3-setuptools
 	@sudo pip3 install poetry nox --upgrade
 
-# Run tests
 test:
 	@echo [!] Running tests
 	@nox
+
+# Build docker image
+docker-build:
+	@echo [!] Building Docker image with tag: $(IMAGE_NAME)
+	@docker build -f Dockerfile --no-cache -t $(IMAGE_NAME) .
+
+# Tag docker image
+docker-tag:
+	$(eval GIT_REVISION=$(shell git rev-parse HEAD | cut -c1-7))
+	@echo [!] Tagging $(IMAGE_NAME) image with $(IMAGE_NAME):$(GIT_REVISION)
+	@docker tag $(IMAGE_NAME):latest $(IMAGE_NAME):$(GIT_REVISION)
+
+	$(eval VERSION=$(shell git for-each-ref --sort=-v:refname --count=1 refs/tags/[0-9]*.[0-9]*.[0-9]* refs/tags/v[0-9]*.[0-9]*.[0-9]* | cut -d / -f 3-))
+	@if [ -n $(VERSION) ]; then \
+		echo [!] Tagging $(IMAGE_NAME) image with $(IMAGE_NAME):latest; \
+		docker tag $(IMAGE_NAME):latest $(IMAGE_NAME):latest; \
+		echo [!] Tagging $(IMAGE_NAME) image with $(IMAGE_NAME):$(VERSION); \
+		docker tag $(IMAGE_NAME):latest $(IMAGE_NAME):$(VERSION); \
+	fi
+
+# Push image to docker registry
+docker-push:
+	$(eval GIT_REVISION=$(shell git rev-parse HEAD | cut -c1-7))
+	@echo [!] Pushing $(IMAGE_NAME):$(GIT_REVISION)
+	@docker push $(IMAGE_NAME):$(GIT_REVISION)
+
+	$(eval VERSION=$(shell git for-each-ref --sort=-v:refname --count=1 refs/tags/[0-9]*.[0-9]*.[0-9]* refs/tags/v[0-9]*.[0-9]*.[0-9]* | cut -d / -f 3-))
+	@if [ -n $(VERSION) ]; then \
+		echo [!] Pushing $(IMAGE_NAME):latest; \
+		docker push $(IMAGE_NAME):latest; \
+		echo [!] Pushing $(IMAGE_NAME):$(VERSION); \
+		docker push $(IMAGE_NAME):$(VERSION); \
+	fi
+
+# Build docker image and push to AWS registry
+docker-build-and-push: docker-build docker-tag docker-push
+
+# Configure helm repo
+helm-configure:
+	@echo [!] Adding $(HELM_CHART_REPO) helm repo
+	@helm repo add --username camparibot --password $(CAMPARIBOT_TOKEN) aporia-helm-charts https://raw.githubusercontent.com/$(HELM_CHART_REPO)/main
+
+# Push chart to helm repository
+helm-push:
+	@echo [!] Packaging helm chart
+	@helm package $(HELM_CHART)
+
+	$(eval PACKAGE_FILENAME=$(shell helm show chart $(HELM_CHART) | yq e '.name' - )-$(shell helm show chart $(HELM_CHART) | yq e '.version' - ).tgz)
+
+	@echo [!] Pushing helm chart to repo
+	@rm -rf /tmp/helm-charts && \
+		git clone https://camparibot:$(CAMPARIBOT_TOKEN)@github.com/$(HELM_CHART_REPO).git /tmp/helm-charts && \
+		mv $(PACKAGE_FILENAME) /tmp/helm-charts
+		cd /tmp/helm-charts && \
+		helm repo index . && \
+		git add index.yaml $(PACKAGE_FILENAME) && \
+		git commit -m "$(IMAGE_NAME) $(shell helm show chart $(HELM_CHART) | yq e '.version' - )" && \
+		git push
 
 # Bump version
 bump-version:
@@ -48,6 +106,10 @@ bump-version:
 	@poetry version $(NEW_VERSION) || true
 	@git add pyproject.toml || true
 
+	yq e '.version = "$(NEW_VERSION)"' -i $(HELM_CHART)/Chart.yaml
+	yq e '.appVersion = "$(NEW_VERSION)"' -i $(HELM_CHART)/Chart.yaml
+
+	git add $(HELM_CHART)/Chart.yaml
 	git commit -F /tmp/commit-message --amend --no-edit
 
 	git tag -a -m "Version $(NEW_VERSION)" $(NEW_VERSION)
@@ -73,3 +135,5 @@ bump-version:
 	git push --force;
 
 	echo "::set-output name=bumped_version_commit_hash::`git log --pretty=format:'%H' -n 1`";
+
+deploy: docker-build-and-push helm-configure helm-push

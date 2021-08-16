@@ -1,4 +1,4 @@
-# Data source configuration
+## Data source configuration
 
 # Specify the URL/path to your data here (either a local file or s3)
 # Glob patterns are supported, but all files must be of the same format
@@ -12,7 +12,8 @@ format: parquet
 token: 123
 environment: production
 
-# Model configuration
+
+## Model configuration
 
 # You can find the model_id after creating a model in the Aporia dashboard
 model_id: my-model-a2f4

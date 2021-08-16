@@ -1,0 +1,121 @@
+# Default values for aporia-importer.
+# This is a YAML-formatted file.
+
+importer:
+  # Importer cron job schedule
+  schedule: "@daily"
+
+  # YAML configuration. 
+  # Check out examples/s3.yaml for an example.
+  config: ""
+
+  # Logging level.
+  # Can be one of: ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
+  logLevel: INFO
+  
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  resources: {}
+    # limits:
+    #   cpu: 1
+    #   memory: 2Gi
+    # requests:
+    #   cpu: 2
+    #   memory: 4Gi
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  
+  worker:
+    # Amount of threads per worker
+    threadsPerWorker: 2
+
+    # Worker death timeout
+    # Ensures that worker pods will clean themselves up if the Python process disappears unexpectedly.
+    deathTimeout: 60
+  
+    resources:
+      limits:
+        cpu: "2"
+        memory: "6Gi"
+      requests:
+        cpu: "2"
+        memory: "6Gi"
+
+    # serviceAccountName: ""
+
+    podAnnotations: {}
+
+    podSecurityContext: {}
+      # fsGroup: 2000
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
+
+  scheduler:
+    resources:
+      limits:
+        cpu: "1.75"
+        memory: "6Gi"
+      requests:
+        cpu: "1.75"
+        memory: "6Gi"
+
+    # serviceAccountName: ""
+
+    podAnnotations: {}
+
+    podSecurityContext: {}
+      # fsGroup: 2000
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
+
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  repository: ghcr.io/aporia-ai/aporia-importer
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart version.
+  tag: ""
+  
+imagePullSecrets: []
+
+rbac:
+  # Specifies whether RBAC resources should be created
+  create: true
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
