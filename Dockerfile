@@ -10,7 +10,7 @@ RUN pip3 install poetry
 COPY poetry.lock pyproject.toml ./
 
 RUN poetry config virtualenvs.create false
-RUN poetry install --no-interaction --no-ansi --no-dev
+RUN poetry install --no-interaction --no-ansi --no-dev -E all
 
 COPY . .
 
