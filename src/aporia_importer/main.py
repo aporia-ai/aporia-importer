@@ -1,9 +1,12 @@
 import argparse
 import logging
+import yaml
 from pathlib import Path
 from uuid import uuid4
+from dask.config import expand_environment_variables
 from dask.distributed import Client, get_worker
 from dask_kubernetes import KubeCluster
+from dask_kubernetes.objects import make_pod_from_dict
 import aporia
 
 from .config import load_config
@@ -145,7 +148,11 @@ def main():
 
     # Horizontally scale on K8s if necessary.
     if args.enable_k8s:
-        with KubeCluster(pod_template=args.k8s_worker_spec_path, scheduler_pod_template=args.k8s_scheduler_spec_path) as cluster:
+        # Load scheduler pod template from path (for some reason this isn't necessary for the worker template)
+        with open(args.k8s_scheduler_spec_path) as k8s_scheduler_spec:
+            scheduler_pod_template = make_pod_from_dict(expand_environment_variables(yaml.safe_load(k8s_scheduler_spec)))
+
+        with KubeCluster(pod_template=args.k8s_worker_spec_path, scheduler_pod_template=scheduler_pod_template) as cluster:
             cluster.adapt(minimum=args.k8s_workers_min, maximum=args.k8s_workers_max)
 
             # Connect Dask to the cluster
