@@ -53,13 +53,13 @@ autoscaling:
     # Ensures that worker pods will clean themselves up if the Python process disappears unexpectedly.
     deathTimeout: 60
   
-    resources: {}
-      # limits:
-      #   cpu: "2"
-      #   memory: "6Gi"
-      # requests:
-      #   cpu: "2"
-      #   memory: "6Gi"
+    resources:
+      limits:
+        cpu: "2"
+        memory: "6Gi"
+      requests:
+        cpu: "2"
+        memory: "6Gi"
 
     # serviceAccountName: ""
 
@@ -75,13 +75,13 @@ autoscaling:
     affinity: {}
 
   scheduler:
-    resources: {}
-      # limits:
-      #   cpu: "1.75"
-      #   memory: "6Gi"
-      # requests:
-      #   cpu: "1.75"
-      #   memory: "6Gi"
+    resources:
+      limits:
+        cpu: "1.75"
+        memory: "6Gi"
+      requests:
+        cpu: "1.75"
+        memory: "6Gi"
 
     # serviceAccountName: ""
 
