@@ -61,7 +61,6 @@ importlib-metadata = {version = ">=1.5.0,<2.0.0", markers = "python_version < \"
 numpy = {version = ">=1.15.0,<2.0.0", optional = true, markers = "extra == \"training\" or extra == \"pandas\" or extra == \"all\""}
 orjson = ">=3.6.0,<4.0.0"
 pandas = {version = ">=0.21,<2.0.0", optional = true, markers = "extra == \"training\" or extra == \"pandas\" or extra == \"all\""}
-pyspark = {version = ">=3.0.0,<4.0.0", optional = true, markers = "extra == \"pyspark\" or extra == \"all\""}
 tenacity = ">=6.2.0,<7.0.0"
 
 [package.extras]
@@ -789,14 +788,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [[package]]
-name = "py4j"
-version = "0.10.9"
-description = "Enables Python programs to dynamically access arbitrary Java objects"
-category = "main"
-optional = false
-python-versions = "*"
-
-[[package]]
 name = "pyarrow"
 version = "5.0.0"
 description = "Python library for Apache Arrow"
@@ -863,22 +854,6 @@ description = "Python parsing module"
 category = "main"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
-
-[[package]]
-name = "pyspark"
-version = "3.1.2"
-description = "Apache Spark Python API"
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-py4j = "0.10.9"
-
-[package.extras]
-ml = ["numpy (>=1.7)"]
-mllib = ["numpy (>=1.7)"]
-sql = ["pandas (>=0.23.2)", "pyarrow (>=1.0.0)"]
 
 [[package]]
 name = "pytest"
@@ -1217,7 +1192,7 @@ s3 = ["s3fs"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.7"
-content-hash = "cecee32555890ef2bebd008439d2f68b5e0c7827dac431620870ad2c4d37e2b4"
+content-hash = "3cb6ad6ae41e04e89b2fc24a85c5d9867aa90a99a69b1ed7fdbaa98f00ddc617"
 
 [metadata.files]
 aiobotocore = [
@@ -1751,10 +1726,6 @@ py = [
     {file = "py-1.10.0-py2.py3-none-any.whl", hash = "sha256:3b80836aa6d1feeaa108e046da6423ab8f6ceda6468545ae8d02d9d58d18818a"},
     {file = "py-1.10.0.tar.gz", hash = "sha256:21b81bda15b66ef5e1a777a21c4dcd9c20ad3efd0b3f817e7a809035269e1bd3"},
 ]
-py4j = [
-    {file = "py4j-0.10.9-py2.py3-none-any.whl", hash = "sha256:859ba728a7bb43e9c2bf058832759fb97a598bb28cc12f34f5fc4abdec08ede6"},
-    {file = "py4j-0.10.9.tar.gz", hash = "sha256:36ec57f43ff8ced260a18aa9a4e46c3500a730cac8860e259cbaa546c2b9db2f"},
-]
 pyarrow = [
     {file = "pyarrow-5.0.0-cp36-cp36m-macosx_10_13_x86_64.whl", hash = "sha256:e9ec80f4a77057498cf4c5965389e42e7f6a618b6859e6dd615e57505c9167a6"},
     {file = "pyarrow-5.0.0-cp36-cp36m-macosx_10_9_x86_64.whl", hash = "sha256:b1453c2411b5062ba6bf6832dbc4df211ad625f678c623a2ee177aee158f199b"},
@@ -1830,9 +1801,6 @@ pyflakes = [
 pyparsing = [
     {file = "pyparsing-2.4.7-py2.py3-none-any.whl", hash = "sha256:ef9d7589ef3c200abe66653d3f1ab1033c3c419ae9b9bdb1240a85b024efc88b"},
     {file = "pyparsing-2.4.7.tar.gz", hash = "sha256:c203ec8783bf771a155b207279b9bccb8dea02d8f0c9e5f8ead507bc3246ecc1"},
-]
-pyspark = [
-    {file = "pyspark-3.1.2.tar.gz", hash = "sha256:5e25ebb18756e9715f4d26848cc7e558035025da74b4fc325a0ebc05ff538e65"},
 ]
 pytest = [
     {file = "pytest-5.4.3-py3-none-any.whl", hash = "sha256:5c0db86b698e8f170ba4582a492248919255fcd4c79b1ee64ace34301fb589a1"},

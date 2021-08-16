@@ -1,6 +1,6 @@
 SHELL := /bin/bash
 HELM_CHART=./charts/aporia-importer
-
+HELM_CHART_REPO=aporia-ai/public-helm-charts
 DEFAULT_VERSION=1.0.0
 
 # Install dependencies
@@ -52,6 +52,31 @@ docker-push:
 		echo [!] Pushing $(IMAGE_NAME):$(VERSION); \
 		docker push $(IMAGE_NAME):$(VERSION); \
 	fi
+
+# Build docker image and push to AWS registry
+docker-build-and-push: docker-login docker-build docker-tag docker-push
+
+# Configure helm repo
+helm-configure:
+	@echo [!] Adding $(HELM_CHART_REPO) helm repo
+	@helm repo add --username camparibot --password $(CAMPARIBOT_TOKEN) aporia-helm-charts https://raw.githubusercontent.com/$(HELM_CHART_REPO)/main
+
+# Push chart to helm repository
+helm-push:
+	@echo [!] Packaging helm chart
+	@helm package $(HELM_CHART)
+
+	$(eval PACKAGE_FILENAME=$(shell helm show chart $(HELM_CHART) | yq e '.name' - )-$(shell helm show chart $(HELM_CHART) | yq e '.version' - ).tgz)
+
+	@echo [!] Pushing helm chart to repo
+	@rm -rf /tmp/helm-charts && \
+		git clone https://camparibot:$(CAMPARIBOT_TOKEN)@github.com/$(HELM_CHART_REPO).git /tmp/helm-charts && \
+		mv $(PACKAGE_FILENAME) /tmp/helm-charts
+		cd /tmp/helm-charts && \
+		helm repo index . && \
+		git add index.yaml $(PACKAGE_FILENAME) && \
+		git commit -m "$(IMAGE_NAME) $(shell helm show chart $(HELM_CHART) | yq e '.version' - )" && \
+		git push
 
 # Bump version
 bump-version:
@@ -110,4 +135,4 @@ bump-version:
 
 	echo "::set-output name=bumped_version_commit_hash::`git log --pretty=format:'%H' -n 1`";
 
-deploy: docker-build docker-tag docker-push
+deploy: docker-build-and-push helm-configure helm-push
