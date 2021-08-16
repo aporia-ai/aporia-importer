@@ -15,4 +15,6 @@ RUN poetry install --no-interaction --no-ansi --no-dev -E all
 COPY . .
 
 WORKDIR /aporia-importer/src
+ENV PYTHONPATH "${PYTHONPATH}:./"
+
 ENTRYPOINT python3 -m aporia_importer.main
