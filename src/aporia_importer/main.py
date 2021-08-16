@@ -48,6 +48,11 @@ def parse_args() -> argparse.Namespace:
         type=str,
         help="Path to the Dask worker spec (see https://kubernetes.dask.org/en/latest/kubecluster.html)",
     )
+    parser.add_argument(
+        "--k8s-scheduler-spec-path",
+        type=str,
+        help="Path to the Dask scheduler spec (see https://kubernetes.dask.org/en/latest/kubecluster.html)",
+    )
     return parser.parse_args()
 
 
@@ -140,7 +145,7 @@ def main():
 
     # Horizontally scale on K8s if necessary.
     if args.enable_k8s:
-        with KubeCluster(args.k8s_worker_spec_path) as cluster:
+        with KubeCluster(pod_template=args.k8s_worker_spec_path, scheduler_pod_template=args.k8s_scheduler_spec_path) as cluster:
             cluster.adapt(minimum=args.k8s_workers_min, maximum=args.k8s_workers_max)
 
             # Connect Dask to the cluster
