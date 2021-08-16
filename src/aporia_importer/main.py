@@ -2,12 +2,9 @@ import argparse
 import logging
 from pathlib import Path
 from uuid import uuid4
-from dask.distributed import Client
+from dask.distributed import Client, get_worker
 from dask_kubernetes import KubeCluster
-from dask_cloudprovider.aws import EC2Cluster
-
 import aporia
-from aporia.pandas import pandas_to_dict
 
 from .config import load_config
 from .data_loader import load_data
@@ -55,45 +52,58 @@ def parse_args() -> argparse.Namespace:
 
 
 def process_partition(df, config):
+    import aporia
+    import uuid
 
-    print("inside process_partition")
+    # Are we running in a Dask worker?
+    worker = None
+    try:
+        worker = get_worker()
+    except ValueError:
+        # Dask is throwing an Exception if there are no workers (local execution).
+        pass
 
-    # Might need to reinitialize Aporia because this can happen in a different process on a remote machine
-    aporia.init(
-        token=config.token,
-        host=config.aporia_host,
-        port=config.aporia_port,
-        environment=config.environment,
-        verbose=True,
-    )
+    # Initialize Aporia in this worker if necessary
+    if worker is not None:
+        if not worker.data.get("IsAporiaInitialized", False):
+            print("Initializing Aporia; worker = ", worker.name)
+            aporia.init(
+                token=config.token,
+                host=config.aporia_host,
+                port=config.aporia_port,
+                environment=config.environment,
+                verbose=True,
+            )
 
-    model = aporia.Model(
-        model_id=config.model_id,
-        model_version=config.model_version.name,
-    )
+            worker.data["IsAporiaInitialized"] = True
+        else:
+            print("Aporia was already initialized in this worker", worker.name)
+
+
+    # Load Aporia model
+    model = aporia.Model(config.model_id, config.model_version.name)
 
     # Iterate rows and log to Aporia
     for _, row in df.iterrows():
-        # NOTE TO USER: 
-        # If you wish to modify your data before logging it, do it here
+        # NOTE: If you wish to modify your data before logging it, do it here
 
         raw_inputs = None
         if config.model_version.raw_inputs is not None:
-            raw_inputs = pandas_to_dict(row[config.model_version.raw_inputs.keys()])
-
+            raw_inputs = aporia.pandas.pandas_to_dict(row[config.model_version.raw_inputs.keys()])
+        
         model.log_prediction(
-            id=str(uuid4()),
-            features=pandas_to_dict(row[config.model_version.features.keys()]),
-            predictions=pandas_to_dict(row[config.model_version.predictions.keys()]),
+            id=str(uuid.uuid4()),
+            features=aporia.pandas.pandas_to_dict(row[config.model_version.features.keys()]),
+            predictions=aporia.pandas.pandas_to_dict(row[config.model_version.predictions.keys()]),
             raw_inputs=raw_inputs,
         )
 
     model.flush()
 
 
+
 def log_data(config):
-    # Initialize Aporia & create version
-    logging.info("Initializing Aporia SDK")
+    # Initialize Aporia
     aporia.init(
         token=config.token,
         host=config.aporia_host,
@@ -102,7 +112,6 @@ def log_data(config):
         verbose=True,
     )
 
-    logging.info("Creating model version")
     model = aporia.create_model_version(
         model_id=config.model_id,
         model_version=config.model_version.name,
@@ -118,7 +127,7 @@ def log_data(config):
 
     # Log data
     logging.info("Logging predictions")
-    df.map_partitions(process_partition, config=config).compute()
+    df.map_partitions(process_partition, config=config, meta=(None, 'f8')).compute()
 
 
 def main():
@@ -139,6 +148,8 @@ def main():
                 log_data(config)
     else:
         log_data(config)
+
+        
 
 if __name__ == "__main__":
     main()
