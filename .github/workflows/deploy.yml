@@ -4,7 +4,6 @@ on:
     branches:
       - master
       - release/*
-      - devops/helm-chart
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
