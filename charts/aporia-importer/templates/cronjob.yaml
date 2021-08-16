@@ -19,7 +19,7 @@ spec:
           labels:
             {{- include "aporia-importer.selectorLabels" . | nindent 12 }}
         spec:
-          {{- with .Values.importer.imagePullSecrets }}
+          {{- with .Values.imagePullSecrets }}
           imagePullSecrets:
             {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -30,8 +30,8 @@ spec:
             - name: {{ .Chart.Name }}
               securityContext:
                 {{- toYaml .Values.importer.securityContext | nindent 16 }}
-              image: "{{ .Values.importer.image.repository }}:{{ .Values.importer.image.tag | default .Chart.AppVersion }}"
-              imagePullPolicy: {{ .Values.importer.image.pullPolicy }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
               command: ["/bin/bash"]
               args:
               - -c
@@ -43,6 +43,7 @@ spec:
                 --k8s-workers-min {{ .Values.autoscaling.minReplicas | quote }}
                 --k8s-workers-max {{ .Values.autoscaling.maxReplicas | quote }}
                 --k8s-worker-spec-path /aporia-importer/config/worker-spec.yaml
+                --k8s-scheduler-spec-path /aporia-importer/config/scheduler-spec.yaml
                 {{- end }}
               resources:
                 {{- toYaml .Values.importer.resources | nindent 16 }}

@@ -12,15 +12,7 @@ importer:
   # Logging level.
   # Can be one of: ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
   logLevel: INFO
-
-  image:
-    repository: ghcr.io/aporia-ai/aporia-importer
-    pullPolicy: IfNotPresent
-    # Overrides the image tag whose default is the chart version.
-    tag: ""
   
-  imagePullSecrets: []
-
   securityContext: {}
     # capabilities:
     #   drop:
@@ -54,11 +46,6 @@ autoscaling:
   maxReplicas: 3
   
   worker:
-    image:
-      repository: daskdev/dask
-      pullPolicy: IfNotPresent
-      tag: latest
-    
     # Amount of threads per worker
     threadsPerWorker: 2
 
@@ -87,8 +74,38 @@ autoscaling:
 
     affinity: {}
 
+  scheduler:
+    resources: {}
+      # limits:
+      #   cpu: "1.75"
+      #   memory: "6Gi"
+      # requests:
+      #   cpu: "1.75"
+      #   memory: "6Gi"
+
+    # serviceAccountName: ""
+
+    podAnnotations: {}
+
+    podSecurityContext: {}
+      # fsGroup: 2000
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
+
 nameOverride: ""
 fullnameOverride: ""
+
+image:
+  repository: ghcr.io/aporia-ai/aporia-importer
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart version.
+  tag: ""
+  
+imagePullSecrets: []
 
 rbac:
   # Specifies whether RBAC resources should be created
