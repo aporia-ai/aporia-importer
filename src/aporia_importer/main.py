@@ -2,11 +2,10 @@ import argparse
 import logging
 import yaml
 from pathlib import Path
-from uuid import uuid4
 from dask.config import expand_environment_variables
 from dask.distributed import Client, get_worker
 from dask_kubernetes import KubeCluster
-from dask_kubernetes.objects import make_pod_from_dict
+from dask_kubernetes.common.objects import make_pod_from_dict
 import aporia
 
 from .config import load_config
